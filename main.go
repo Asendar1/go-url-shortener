@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	handler "github.com/Asendar1/go-url-shortener/handlers"
@@ -15,5 +16,5 @@ func main() {
 	// GET Handlers
 	mux.HandleFunc("/", handler.Redirect)
 
-	http.ListenAndServe("localhost:8080", mux)
+	log.Fatal(http.ListenAndServe("localhost:8080", mux))
 }
