@@ -22,7 +22,18 @@ func Shorten(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "URL has already been shortened", http.StatusConflict)
 		return
 	}
+	var tries int;
 	url_pair := utils.FormURL(origin_url)
+	for {
+		if _ , found := store.ShortToLong[url_pair.ShortURL]; !found {
+			break
+		}
+		url_pair = utils.FormURL(origin_url)
+		if tries > 10 {
+			http.Error(w, "Could not regerenate short url, please try again", http.StatusInternalServerError)
+		}
+		tries++
+	}
 	store.SaveURLPair(url_pair)
 	fmt.Fprintf(w, "%s", url_pair.ShortURL)
 }
