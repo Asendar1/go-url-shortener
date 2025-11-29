@@ -13,6 +13,6 @@ func SaveURLPair(pair models.URLPair) {
 }
 
 func FindOriginalURL(shortURL string) (string, bool) {
-	rtn, err := ShortToLong[shortURL]
-	return rtn, err
+	rtn, ok := ShortToLong[shortURL]
+	return rtn, ok
 }
