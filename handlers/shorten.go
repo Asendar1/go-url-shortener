@@ -40,12 +40,10 @@ func Shorten(w http.ResponseWriter, r *http.Request) {
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	short_url := r.URL.Path[1:]
-	fmt.Printf("short before: %s\n", short_url)
 	original_url, found := store.FindOriginalURL(short_url)
 	if found {
 		http.Redirect(w, r, original_url, http.StatusPermanentRedirect)
 		return
 	}
-	fmt.Printf("short:%s long:%s %v", short_url, original_url, found)
 	http.Error(w, "invalid URL", http.StatusBadRequest)
 }
