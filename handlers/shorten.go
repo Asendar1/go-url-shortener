@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	store "github.com/Asendar1/go-url-shortener/store"
@@ -10,16 +9,16 @@ import (
 
 func Shorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "This URI only for POST method", http.StatusMethodNotAllowed)
+		utils.JSONError(w, http.StatusBadRequest, "Only POST method is allowed")
 		return
 	}
 	origin_url := r.FormValue("url")
 	if origin_url == "" {
-		http.Error(w, "URL parameter is missing", http.StatusBadRequest)
+		utils.JSONError(w, http.StatusBadRequest, "No URL has been given")
 		return
 	}
 	if _, found := store.LongToShort[origin_url]; found {
-		http.Error(w, "URL has already been shortened", http.StatusConflict)
+		utils.JSONError(w, http.StatusConflict, "This URL already been")
 		return
 	}
 	var tries int;
@@ -30,20 +29,28 @@ func Shorten(w http.ResponseWriter, r *http.Request) {
 		}
 		url_pair = utils.FormURL(origin_url)
 		if tries > 10 {
-			http.Error(w, "Could not regerenate short url, please try again", http.StatusInternalServerError)
+			utils.JSONError(w, http.StatusInternalServerError, "Could not generate please try again")
 		}
 		tries++
 	}
 	store.SaveURLPair(url_pair)
-	fmt.Fprintf(w, "%s", url_pair.ShortURL)
+	// return body
+	utils.JSONSuccess(w, http.StatusCreated, map[string]string {
+		"url": url_pair.OriginalURL,
+		"short_code": url_pair.ShortURL,
+		},
+	)
 }
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	short_url := r.URL.Path[1:]
 	original_url, found := store.FindOriginalURL(short_url)
 	if found {
-		http.Redirect(w, r, original_url, http.StatusPermanentRedirect)
+		utils.JSONSuccess(w, 200, map[string]string {
+			"url": original_url,
+			"short_code": short_url,
+		})
 		return
 	}
-	http.Error(w, "invalid URL", http.StatusBadRequest)
+	utils.JSONError(w, http.StatusNotFound, "Not Found in Database")
 }
