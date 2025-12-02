@@ -1,3 +1,5 @@
 .vscode/
 log/
 go-url-shortener
+db/*.go
+db/*.sql.go

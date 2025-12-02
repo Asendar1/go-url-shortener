@@ -3,8 +3,6 @@ package utils
 import (
 	"math/rand"
 	"time"
-
-	models "github.com/Asendar1/go-url-shortener/models"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -12,7 +10,7 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456
 var src = rand.NewSource(time.Now().UnixNano())
 
 
-func FormURL(url string) models.URLPair {
+func FormURL(url string) string {
 	r := rand.New(src)
 	b := make([]byte, 6)
 
@@ -20,8 +18,5 @@ func FormURL(url string) models.URLPair {
 		b[i] = letterBytes[r.Intn(len(letterBytes))]
 	}
 
-	return models.URLPair{
-		OriginalURL: url,
-		ShortURL   : string(b),
-	}
+	return string(b)
 }
