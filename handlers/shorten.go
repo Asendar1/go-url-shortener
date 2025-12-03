@@ -95,17 +95,23 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 	}
 	short_url := r.URL.Path[1:]
 	url_db, err := URLStore.GetByShortCode(short_url)
+	redirectURL := url_db.LongUrl
+    if !strings.HasPrefix(redirectURL, "http://") && !strings.HasPrefix(redirectURL, "https://") {
+        redirectURL = "https://" + redirectURL
+    }
 	URLStore.UpdateClicks(short_url)
 	if err == nil {
-		utils.JSONSuccess(w, 200, map[string]string {
-			"id": 	fmt.Sprintf("%d", url_db.ID),
-			"url": url_db.LongUrl,
-			"short_code": short_url,
-			"created_at": url_db.CreatedAt.Time.String(),
-		})
+		// ? In case you want JSSON response instead of redirect
+		// utils.JSONSuccess(w, 200, map[string]string {
+		// 	"id": 	fmt.Sprintf("%d", url_db.ID),
+		// 	"url": url_db.LongUrl,
+		// 	"short_code": short_url,
+		// 	"created_at": url_db.CreatedAt.Time.String(),
+		// })
+		http.Redirect(w, r, redirectURL, http.StatusPermanentRedirect)
 		return
 	}
-	utils.JSONError(w, http.StatusNotFound, "Not Found in Database")
+	utils.JSONError(w, http.StatusNotFound, "Bad Request: Either URL not found or invalid short URL")
 }
 
 func UpdateShortUrl(w http.ResponseWriter, r *http.Request) {
