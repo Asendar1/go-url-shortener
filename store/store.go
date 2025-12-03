@@ -9,7 +9,7 @@ import (
 )
 
 type Store struct {
-	pool 	*pgxpool.Pool
+	pool 	*pgxpool.Pool // btw you don't need this unless you want raw SQL access
 	queries	*db.Queries
 }
 

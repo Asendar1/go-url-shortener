@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	store "github.com/Asendar1/go-url-shortener/store"
 	utils "github.com/Asendar1/go-url-shortener/utils"
@@ -15,19 +16,25 @@ func SetStore(store *store.Store) {
 	URLStore = store
 }
 
-func Shorten(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost && r.Method != http.MethodPut && r.Method != http.MethodDelete {
-		utils.JSONError(w, http.StatusBadRequest, "Only POST, PUT, and DELETE methods are allowed")
+// Helper function to handle URL shortening
+
+func HandleGETStats(w http.ResponseWriter, r *http.Request) {
+	shortCode := r.URL.Path[len("/shorten/"):len(r.URL.Path)-len("/stats")]
+	urlDb, err := URLStore.GetByShortCode(shortCode)
+	if err != nil {
+		utils.JSONError(w, http.StatusNotFound, "Not Found in Database")
 		return
 	}
-	if r.Method == http.MethodPut {
-		UpdateShortUrl(w, r)
-		return
-	}
-	if r.Method == http.MethodDelete {
-		DeleteURL(w, r)
-		return
-	}
+	utils.JSONSuccess(w, 200, map[string]any{
+		"id": 		fmt.Sprintf("%d", urlDb.ID),
+		"url":		urlDb.LongUrl,
+		"short_code":	urlDb.ShortCode,
+		"created_at":	urlDb.CreatedAt.Time.String(),
+		"clicks":	urlDb.Clicks.Int64,
+	})
+}
+
+func HandleCreateShortURL(w http.ResponseWriter, r *http.Request) {
 	origin_url := r.FormValue("url")
 	if origin_url == "" {
 		utils.JSONError(w, http.StatusBadRequest, "No URL has been given")
@@ -56,7 +63,31 @@ func Shorten(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+func Shorten(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/stats") {
+		HandleGETStats(w, r)
+		return
+	}
+	if r.Method != http.MethodPost && r.Method != http.MethodPut && r.Method != http.MethodDelete {
+		utils.JSONError(w, http.StatusBadRequest, "Bad Request Method")
+		return
+	}
+	if r.Method == http.MethodPut {
+		UpdateShortUrl(w, r)
+		return
+	}
+	if r.Method == http.MethodDelete {
+		DeleteURL(w, r)
+		return
+	}
+	HandleCreateShortURL(w, r)
+}
+
 func Redirect(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		utils.JSONError(w, http.StatusBadRequest, "Bad Request Method")
+		return
+	}
 	short_url := r.URL.Path[1:]
 	url_db, err := URLStore.GetByShortCode(short_url)
 	URLStore.UpdateClicks(short_url)

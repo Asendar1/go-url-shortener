@@ -21,6 +21,5 @@ func main() {
 	mux.HandleFunc("/shorten/", handler.Shorten)
 	// GET Handlers
 	mux.HandleFunc("/", handler.Redirect)
-
 	log.Fatal(http.ListenAndServe("localhost:8080", mux))
 }
