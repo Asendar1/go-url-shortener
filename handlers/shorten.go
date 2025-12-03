@@ -19,7 +19,12 @@ func SetStore(store *store.Store) {
 // Helper function to handle URL shortening
 
 func HandleGETStats(w http.ResponseWriter, r *http.Request) {
-	shortCode := r.URL.Path[len("/shorten/"):len(r.URL.Path)-len("/stats")]
+	shortCode := r.URL.Path[len("/shorten/stats/"):]
+	shortCode = strings.TrimSpace(shortCode)
+	if shortCode == "" {
+		utils.JSONError(w, http.StatusBadRequest, "No short code provided")
+		return
+	}
 	urlDb, err := URLStore.GetByShortCode(shortCode)
 	if err != nil {
 		utils.JSONError(w, http.StatusNotFound, "Not Found in Database")
@@ -64,7 +69,7 @@ func HandleCreateShortURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func Shorten(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/stats") {
+	if r.Method == http.MethodGet{
 		HandleGETStats(w, r)
 		return
 	}
